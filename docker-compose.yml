@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  vulnmcp-server:
+    build:
+      context: ./mcp-server
+      dockerfile: Dockerfile
+    container_name: vulnmcp-server
+    stdin_open: true
+    tty: true
+    volumes:
+      - ./data:/app/data
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    networks:
+      - vulnmcp-network
+
+  vulnmcp-web:
+    image: nginx:alpine
+    container_name: vulnmcp-web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./web-interface:/usr/share/nginx/html:ro
+    depends_on:
+      - vulnmcp-server
+    restart: unless-stopped
+    networks:
+      - vulnmcp-network
+
+networks:
+  vulnmcp-network:
+    driver: bridge
