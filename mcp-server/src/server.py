@@ -116,7 +116,13 @@ class VulnMCPServer:
             
             # Add all challenge tools
             for challenge in self.challenges.values():
-                tools.extend(challenge.get_tools())
+                challenge_tools = challenge.get_tools()
+                # Convert dicts to Tool objects if needed
+                for tool in challenge_tools:
+                    if isinstance(tool, dict):
+                        tools.append(Tool(**tool))
+                    else:
+                        tools.append(tool)
             
             return tools
         
@@ -136,8 +142,9 @@ class VulnMCPServer:
                 
                 # Route to appropriate challenge
                 for challenge in self.challenges.values():
-                    challenge_tools = [t.name for t in challenge.get_tools()]
-                    if name in challenge_tools:
+                    challenge_tools = challenge.get_tools()
+                    tool_names = [t.name if isinstance(t, Tool) else t.get("name") for t in challenge_tools]
+                    if name in tool_names:
                         result = await challenge.handle_tool_call(name, arguments)
                         return result
                 
@@ -168,7 +175,12 @@ class VulnMCPServer:
             
             # Add challenge resources
             for challenge in self.challenges.values():
-                resources.extend(challenge.get_resources())
+                challenge_resources = challenge.get_resources()
+                for resource in challenge_resources:
+                    if isinstance(resource, dict):
+                        resources.append(Resource(**resource))
+                    else:
+                        resources.append(resource)
             
             return resources
         
@@ -177,16 +189,20 @@ class VulnMCPServer:
             """Handle resource reads"""
             
             try:
-                if uri == "vulnmcp://welcome":
+                # Convert uri to string if it's an AnyUrl object
+                uri_str = str(uri)
+                
+                if uri_str == "vulnmcp://welcome":
                     return self._get_welcome_text()
                 
                 # Route to appropriate challenge
                 for challenge in self.challenges.values():
-                    challenge_resources = [r["uri"] for r in challenge.get_resources()]
-                    if uri in challenge_resources or uri.startswith("vulnmcp://") or uri.startswith("challenge"):
-                        return await challenge.handle_resource_read(uri)
+                    challenge_resources = challenge.get_resources()
+                    resource_uris = [r["uri"] if isinstance(r, dict) else r.uri for r in challenge_resources]
+                    if uri_str in resource_uris or uri_str.startswith("vulnmcp://") or uri_str.startswith("challenge"):
+                        return await challenge.handle_resource_read(uri_str)
                 
-                return f"❌ Resource not found: {uri}"
+                return f"❌ Resource not found: {uri_str}"
                 
             except Exception as e:
                 logger.error(f"Error reading resource: {e}", exc_info=True)
