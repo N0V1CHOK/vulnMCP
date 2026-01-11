@@ -19,7 +19,7 @@ from mcp.types import (
     INTERNAL_ERROR
 )
 
-from challenges import (
+from src.challenges import (
     Level1Injection,
     Level2ResourceURI,
     Level3ContextPoison,
@@ -29,7 +29,7 @@ from challenges import (
     Level7MessageInjection,
     Level8RootAbuse,
 )
-from challenges.scoring import ScoreManager
+from src.challenges.scoring import ScoreManager
 
 logging.basicConfig(
     level=logging.INFO,
