@@ -54,7 +54,7 @@
 ### Installation
 ```bash
 # 1. Clone the repository
-git clone https://github.com/YOUR_ORG/vulnmcp.git
+git clone https://github.com/N0V1CHOK/vulnMCP.git
 cd vulnmcp
 
 # 2. Start with Docker
