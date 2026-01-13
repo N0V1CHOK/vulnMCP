@@ -34,8 +34,8 @@ class Level1Injection(BaseChallenge):
             title="🎯 Level 1: Tool Parameter Injection",
             description=(
                 "Welcome to VulnMCP! Your first challenge involves a simple system info tool.\n\n"
-                "The tool accepts a 'component' parameter to check different system components.\n"
-                "Valid components are: cpu, memory, disk, network\n\n"
+                "The tool uses 'ping' command to check if a host is reachable.\n"
+                "Try pinging different hosts like: 127.0.0.1, localhost, etc.\n\n"
                 "🎯 OBJECTIVE: Find a way to read the flag file at /app/data/flags/level1.txt\n\n"
                 "⚠️ This is an MCP-specific vulnerability - the tool itself is vulnerable!"
             ),
@@ -52,12 +52,12 @@ class Level1Injection(BaseChallenge):
                 ),
                 Hint(
                     level=2,
-                    text="Try using semicolon (;) or pipe (|) to inject additional commands after the valid component name.",
+                    text="Try using semicolon (;) or pipe (|) to inject additional commands after the hostname.",
                     points_cost=20
                 ),
                 Hint(
                     level=3,
-                    text="Example: component='cpu; cat /app/data/flags/level1.txt'",
+                    text="Example: host='127.0.0.1; cat /app/data/flags/level1.txt'",
                     points_cost=30
                 )
             ]
@@ -69,24 +69,23 @@ class Level1Injection(BaseChallenge):
             {
                 "name": "system_info",
                 "description": (
-                    "🖥️ System Information Tool\n\n"
-                    "Get information about system components.\n\n"
-                    "Available components:\n"
-                    "  - cpu: CPU information\n"
-                    "  - memory: Memory usage\n"
-                    "  - disk: Disk usage\n"
-                    "  - network: Network configuration\n\n"
-                    "Usage: system_info(component='cpu')"
+                    "🖥️ System Ping Tool\n\n"
+                    "Ping a host to check if it's reachable.\n\n"
+                    "Examples:\n"
+                    "  - 127.0.0.1 (localhost)\n"
+                    "  - localhost\n"
+                    "  - 8.8.8.8 (Google DNS)\n\n"
+                    "Usage: system_info(host='127.0.0.1')"
                 ),
                 "inputSchema": {
                     "type": "object",
                     "properties": {
-                        "component": {
+                        "host": {
                             "type": "string",
-                            "description": "System component to check (cpu/memory/disk/network)"
+                            "description": "Hostname or IP address to ping"
                         }
                     },
-                    "required": ["component"]
+                    "required": ["host"]
                 }
             },
             {
@@ -117,13 +116,13 @@ class Level1Injection(BaseChallenge):
         """Handle tool calls for Level 1"""
         
         if name == "system_info":
-            return await self._system_info(arguments.get("component", ""))
+            return await self._system_info(arguments.get("host", ""))
         elif name == "submit_flag":
             return await self._submit_flag(arguments.get("flag", ""))
         
         return [{"type": "text", "text": f"Unknown tool: {name}"}]
     
-    async def _system_info(self, component: str) -> List[Dict[str, Any]]:
+    async def _system_info(self, host: str) -> List[Dict[str, Any]]:
         """
         VULNERABLE: Executes shell commands without input sanitization
         
@@ -131,37 +130,22 @@ class Level1Injection(BaseChallenge):
         """
         self.attempts += 1
         
-        logger.warning(f"⚠️ [LEVEL 1] system_info called with component: {component}")
-        
-        # Map of valid components to safe commands
-        valid_components = {
-            "cpu": "cat /proc/cpuinfo | head -n 20",
-            "memory": "free -h",
-            "disk": "df -h",
-            "network": "ip addr show"
-        }
+        logger.warning(f"⚠️ [LEVEL 1] system_info called with host: {host}")
         
         try:
             # VULNERABILITY: Direct shell execution without sanitization
-            # This allows command injection through the component parameter
-            if component in valid_components:
-                command = valid_components[component]
-            else:
-                # Still vulnerable! Uses the user input directly
-                command = f"echo 'Unknown component: {component}'"
+            # This allows command injection via shell metacharacters
+            command = f"ping -c 1 {host}"
             
-            # CRITICAL VULNERABILITY: shell=True with user input
             result = subprocess.run(
                 command,
-                shell=True,  # ❌ DANGEROUS!
+                shell=True,  # DANGEROUS: Enables shell interpretation
                 capture_output=True,
                 text=True,
                 timeout=5
             )
             
-            output = result.stdout
-            if result.stderr:
-                output += f"\n\nErrors:\n{result.stderr}"
+            output = result.stdout + result.stderr
             
             # Check if flag was found
             if "FLAG{" in output:
@@ -177,19 +161,19 @@ class Level1Injection(BaseChallenge):
             
             return [{
                 "type": "text",
-                "text": f"System Information - {component}\n\n{output}"
+                "text": f"Ping result:\n\n{output}\n\nReturn code: {result.returncode}"
             }]
             
         except subprocess.TimeoutExpired:
             return [{
                 "type": "text",
-                "text": "❌ Command timed out (5 seconds limit)"
+                "text": "Command timed out (5 seconds)"
             }]
         except Exception as e:
-            logger.error(f"Error in system_info: {e}")
+            logger.error(f"Error in ping command: {e}")
             return [{
                 "type": "text",
-                "text": f"❌ Error: {str(e)}"
+                "text": f"Error executing ping: {str(e)}"
             }]
     
     async def _submit_flag(self, flag: str) -> List[Dict[str, Any]]:
@@ -214,8 +198,8 @@ class Level1Injection(BaseChallenge):
                     f"3. Never use shell=True with user-controllable input\n"
                     f"4. Command injection works through MCP protocol too\n\n"
                     f"SECURE IMPLEMENTATION:\n"
-                    f"  ❌ subprocess.run(f'echo {{user_input}}', shell=True)\n"
-                    f"  ✅ subprocess.run(['echo', user_input], shell=False)\n\n"
+                    f"  ❌ subprocess.run(f'ping {{host}}', shell=True)\n"
+                    f"  ✅ subprocess.run(['ping', '-c', '1', host], shell=False)\n\n"
                     f"Ready for Level 2? It gets trickier! 🚀"
                 )
             }]
@@ -225,7 +209,7 @@ class Level1Injection(BaseChallenge):
                 "text": (
                     f"❌ Incorrect flag!\n\n"
                     f"Keep trying! The flag format is: FLAG{{...}}\n"
-                    f"Need help? Use the hint system!"
+                    f"Need help? Use: vulnmcp_hint(challenge_id=1, level=1)"
                 )
             }]
     
