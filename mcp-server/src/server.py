@@ -187,26 +187,29 @@ class VulnMCPServer:
         @self.server.read_resource()
         async def read_resource(uri: str) -> str:
             """Handle resource reads"""
-            
+    
             try:
                 # Convert uri to string if it's an AnyUrl object
                 uri_str = str(uri)
-                
-                if uri_str == "vulnmcp://welcome":
-                    return self._get_welcome_text()
-                
-                # Route to appropriate challenge
-                for challenge in self.challenges.values():
-                    challenge_resources = challenge.get_resources()
-                    resource_uris = [r["uri"] if isinstance(r, dict) else r.uri for r in challenge_resources]
-                    if uri_str in resource_uris or uri_str.startswith("vulnmcp://") or uri_str.startswith("challenge"):
-                        return await challenge.handle_resource_read(uri_str)
-                
-                return f"❌ Resource not found: {uri_str}"
-                
-            except Exception as e:
-                logger.error(f"Error reading resource: {e}", exc_info=True)
-                return f"❌ Error reading resource: {str(e)}"
+        
+            if uri_str == "vulnmcp://welcome":
+                return self._get_welcome_text()
+        
+            # Route to appropriate challenge - check resources FIRST
+            for challenge in self.challenges.values():
+                challenge_resources = challenge.get_resources()
+                resource_uris = [r["uri"] if isinstance(r, dict) else r.uri for r in challenge_resources]
+            
+                # FIXED: Check if this specific challenge owns this resource
+                if uri_str in resource_uris:
+                    return await challenge.handle_resource_read(uri_str)
+        
+            # If no challenge owns it, return not found
+            return f"❌ Resource not found: {uri_str}"
+        
+    except Exception as e:
+        logger.error(f"Error reading resource: {e}", exc_info=True)
+        return f"❌ Error reading resource: {str(e)}"
     
     async def _help(self, action: str = "help") -> list[TextContent]:
         """Provide help and information"""
