@@ -46,15 +46,15 @@ class Level2ResourceURI(BaseChallenge):
         return ChallengeInfo(
             id=2,
             name="level02_resource_uri",
-            title="🎯 Level 2: Resource URI Manipulation",
+            title=" Level 2: Resource URI Manipulation",
             description=(
                 "VulnMCP has a documentation system accessible via MCP resources.\n\n"
                 "You can access public docs using:\n"
                 "  vulnmcp://docs/public/welcome\n"
                 "  vulnmcp://docs/public/about\n"
                 "  vulnmcp://docs/public/help\n\n"
-                "🎯 OBJECTIVE: Find a way to access admin documentation and retrieve the flag!\n\n"
-                "⚠️ The resource URI handler might not be as secure as it seems..."
+                " OBJECTIVE: Find a way to access admin documentation and retrieve the flag!\n\n"
+                " The resource URI handler might not be as secure as it seems..."
             ),
             difficulty=Difficulty.BEGINNER,
             points=150,
@@ -101,22 +101,41 @@ class Level2ResourceURI(BaseChallenge):
         return [
             {
                 "uri": "vulnmcp://docs/public/welcome",
-                "name": "📖 Welcome Documentation",
+                "name": " Welcome Documentation",
                 "description": "Public welcome documentation",
                 "mimeType": "text/plain"
             },
             {
                 "uri": "vulnmcp://docs/public/about",
-                "name": "📖 About VulnMCP",
+                "name": " About VulnMCP",
                 "description": "Information about this platform",
                 "mimeType": "text/plain"
             },
             {
                 "uri": "vulnmcp://docs/public/help",
-                "name": "📖 Help Documentation",
+                "name": " Help Documentation",
                 "description": "How to use MCP resources",
                 "mimeType": "text/plain"
+            },
+            {
+                "uri": "vulnmcp://docs/admin/config",
+                "name": " Admin Configuration",
+                "description": "Restricted - Admin access only",
+                "mimeType": "text/plain"
+            },
+            {
+                "uri": "vulnmcp://docs/admin/secrets",
+                "name": " Admin Secrets",
+                "description": "Restricted - Admin access only",
+                "mimeType": "text/plain"
+            },
+            {
+                "uri": "vulnmcp://docs/admin/internal",
+                "name": " Internal Docs",
+                "description": "Restricted - Admin access only",
+                "mimeType": "text/plain"
             }
+    
         ]
     
     async def handle_tool_call(
@@ -139,7 +158,7 @@ class Level2ResourceURI(BaseChallenge):
         """
         self.attempts += 1
         
-        logger.warning(f"⚠️ [LEVEL 2] Resource requested: {uri}")
+        logger.warning(f" [LEVEL 2] Resource requested: {uri}")
         
         # Parse the URI
         parsed = urlparse(uri)
@@ -148,7 +167,7 @@ class Level2ResourceURI(BaseChallenge):
         logger.info(f"Path parts: {path_parts}")
         
         if len(path_parts) < 2:
-            return "❌ Invalid resource URI. Format: vulnmcp://docs/category/document"
+            return " Invalid resource URI. Format: vulnmcp://docs/category/document"
         
         category = path_parts[0]
         document = path_parts[1]
@@ -156,10 +175,10 @@ class Level2ResourceURI(BaseChallenge):
         # VULNERABILITY: Weak access control - only checks if category exists
         # Doesn't verify the user should have access!
         if category not in self.resources_db:
-            return f"❌ Unknown category: {category}\n\nAvailable: public"
+            return f" Unknown category: {category}\n\nAvailable: public"
         
         if document not in self.resources_db[category]:
-            return f"❌ Document '{document}' not found in category '{category}'"
+            return f" Document '{document}' not found in category '{category}'"
         
         content = self.resources_db[category][document]
         
@@ -167,7 +186,7 @@ class Level2ResourceURI(BaseChallenge):
         if "FLAG{" in content and category == "admin":
             logger.warning("🚨 [LEVEL 2] ADMIN RESOURCE ACCESSED - FLAG LEAKED!")
             return (
-                f"🎉 ACCESS GRANTED TO ADMIN RESOURCE!\n\n"
+                f" ACCESS GRANTED TO ADMIN RESOURCE!\n\n"
                 f"Category: {category}\n"
                 f"Document: {document}\n\n"
                 f"{'='*50}\n"
@@ -177,7 +196,7 @@ class Level2ResourceURI(BaseChallenge):
                 f"Now submit this flag using the 'submit_flag' tool."
             )
         
-        return f"📖 {category}/{document}\n\n{content}"
+        return f" {category}/{document}\n\n{content}"
     
     async def _submit_flag(self, flag: str) -> List[Dict[str, Any]]:
         """Submit and validate flag"""
@@ -187,11 +206,11 @@ class Level2ResourceURI(BaseChallenge):
             return [{
                 "type": "text",
                 "text": (
-                    f"🎉🎉🎉 LEVEL 2 COMPLETED! 🎉🎉🎉\n\n"
-                    f"✅ Flag Correct: {flag}\n"
-                    f"⭐ Points Earned: {score}/{self.info.points}\n"
-                    f"💡 Hints Used: {self.hints_used}\n"
-                    f"🎯 Attempts: {self.attempts}\n\n"
+                    f" LEVEL 2 COMPLETED! \n\n"
+                    f" Flag Correct: {flag}\n"
+                    f" Points Earned: {score}/{self.info.points}\n"
+                    f" Hints Used: {self.hints_used}\n"
+                    f" Attempts: {self.attempts}\n\n"
                     f"═══════════════════════════════════════\n"
                     f"WHAT YOU LEARNED:\n"
                     f"═══════════════════════════════════════\n\n"
@@ -200,17 +219,17 @@ class Level2ResourceURI(BaseChallenge):
                     f"3. Access control should verify permissions, not just existence\n"
                     f"4. Resource URIs are attack vectors like any URL\n\n"
                     f"SECURE IMPLEMENTATION:\n"
-                    f"  ✅ Whitelist allowed resources per user\n"
-                    f"  ✅ Validate user has permission before serving\n"
-                    f"  ✅ Never expose admin URIs in resource list\n"
-                    f"  ✅ Use role-based access control\n\n"
-                    f"Level 3 awaits - it gets harder! 💪"
+                    f"   Whitelist allowed resources per user\n"
+                    f"   Validate user has permission before serving\n"
+                    f"   Never expose admin URIs in resource list\n"
+                    f"   Use role-based access control\n\n"
+                    f"Level 3 awaits - it gets harder! "
                 )
             }]
         else:
             return [{
                 "type": "text",
-                "text": "❌ Incorrect flag! Keep exploring resources..."
+                "text": " Incorrect flag! Keep exploring resources..."
             }]
     
     def check_flag(self, submitted_flag: str) -> bool:
