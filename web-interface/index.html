@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VulnMCP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+            background: #fff;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        h1 {
+            border-bottom: 3px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            margin-top: 40px;
+            color: #555;
+        }
+
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px 15px;
+            margin: 25px 0;
+        }
+
+        pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-left: 3px solid #ccc;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            font-size: 14px;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+        }
+
+        ul, ol {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+
+        li {
+            margin: 8px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: #f8f8f8;
+            font-weight: bold;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin: 40px 0;
+        }
+
+        footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #777;
+            font-size: 14px;
+        }
+
+        a {
+            color: #0066cc;
+        }
+    </style>
+</head>
+<body>
+    <h1>VulnMCP</h1>
+    <p>MCP Security Training Platform</p>
+
+    <div class="warning">
+        <strong>Warning:</strong> This is an intentionally vulnerable environment for educational purposes only. Do not deploy in production or expose to the internet.
+    </div>
+
+    <h2>Setup</h2>
+    <p>Get started in 3 steps:</p>
+
+    <ol>
+        <li>
+            <strong>Clone and start the server</strong>
+            <pre>git clone https://github.com/N0V1CHOK/vulnMCP.git
+cd vulnMCP
+docker-compose up -d</pre>
+        </li>
+        <li>
+            <strong>Configure Claude Desktop</strong>
+            <p>Add this to your <code>claude_desktop_config.json</code> file:</p>
+            <pre>{
+  "mcpServers": {
+    "vulnmcp": {
+      "command": "docker",
+      "args": ["exec", "-i", "vulnmcp-server", "python", "-m", "src.server"]
+    }
+  }
+}</pre>
+        </li>
+        <li>
+            <strong>Start training</strong>
+            <p>Open Claude Desktop and type: <code>vulnmcp_help</code></p>
+        </li>
+    </ol>
+
+    <h2>What's Included</h2>
+    <ul>
+        <li>8 security challenges covering common MCP vulnerabilities</li>
+        <li>Point-based scoring system with leaderboard</li>
+        <li>Built-in hint system (costs points)</li>
+        <li>Detailed explanations for each vulnerability</li>
+    </ul>
+
+    <h2>Challenges</h2>
+    <table>
+        <tr>
+            <th>Challenge</th>
+            <th>Difficulty</th>
+            <th>Points</th>
+        </tr>
+        <tr>
+            <td>Tool Parameter Injection</td>
+            <td>Easy</td>
+            <td>100</td>
+        </tr>
+        <tr>
+            <td>Resource URI Manipulation</td>
+            <td>Easy</td>
+            <td>150</td>
+        </tr>
+        <tr>
+            <td>Context Poisoning</td>
+            <td>Medium</td>
+            <td>200</td>
+        </tr>
+        <tr>
+            <td>Prompt Injection Chain</td>
+            <td>Medium</td>
+            <td>250</td>
+        </tr>
+        <tr>
+            <td>Tool Chaining Exploitation</td>
+            <td>Medium</td>
+            <td>300</td>
+        </tr>
+        <tr>
+            <td>Sampling Manipulation</td>
+            <td>Hard</td>
+            <td>350</td>
+        </tr>
+        <tr>
+            <td>Protocol Message Injection</td>
+            <td>Hard</td>
+            <td>400</td>
+        </tr>
+        <tr>
+            <td>Root Listing Abuse</td>
+            <td>Hard</td>
+            <td>350</td>
+        </tr>
+    </table>
+
+    <h2>Commands</h2>
+    <p>Available commands in Claude:</p>
+    <ul>
+        <li><code>vulnmcp_help</code> - Show help and available commands</li>
+        <li><code>vulnmcp_challenges</code> - List all challenges</li>
+        <li><code>vulnmcp_start [level]</code> - Start a specific challenge</li>
+        <li><code>vulnmcp_hint</code> - Get a hint for current challenge</li>
+        <li><code>vulnmcp_submit [flag]</code> - Submit a flag</li>
+        <li><code>vulnmcp_leaderboard</code> - View the leaderboard</li>
+    </ul>
+
+    <hr>
+
+    <h2>Requirements</h2>
+    <ul>
+        <li>Docker and Docker Compose</li>
+        <li>Claude Desktop (for MCP integration)</li>
+        <li>Basic understanding of security concepts</li>
+    </ul>
+
+    <h2>Troubleshooting</h2>
+    <p>If you run into issues:</p>
+    <ul>
+        <li>Check that Docker containers are running: <code>docker-compose ps</code></li>
+        <li>View logs: <code>docker-compose logs -f</code></li>
+        <li>Restart containers: <code>docker-compose restart</code></li>
+        <li>Make sure ports 8080 and others aren't in use</li>
+    </ul>
+
+    <footer>
+        <p>VulnMCP - Educational security training platform</p>
+        <p><a href="https://github.com/N0V1CHOK/vulnMCP">GitHub Repository</a> | MIT License</p>
+    </footer>
+</body>
+</html>
